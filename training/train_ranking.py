@@ -17,6 +17,7 @@ import mlflow.sklearn
 import mlflow.lightgbm
 import pandas as pd
 import numpy as np
+import pyarrow.parquet as pq
 import lightgbm as lgb
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, log_loss
@@ -30,60 +31,79 @@ def load_config(config_path: str) -> dict:
     return cfg
 
 
-def load_and_prepare_data(cfg: dict) -> pd.DataFrame:
+def load_and_prepare_data(cfg: dict) -> tuple:
     """
-    Load XITE parquet, create engagement label, and build features.
-    Uses head(max_samples) to control memory on small VMs.
+    Load XITE parquet (memory-safe), create engagement label, build features.
+    Uses pyarrow iter_batches to avoid loading entire 31M-row file into memory.
+
+    XITE schema:
+        session_id, video_id, title, main_artist, secondary_artists,
+        genre, subgenres, release_year, video_isrc, time_in_video,
+        mbid, mb_conf, session_order, video_order, context_segment
     """
-    print(f"[data] Loading from {cfg['data_path']}...")
+    data_path = cfg["data_path"]
     max_samples = cfg.get("max_samples", 50000)
-    df = pd.read_parquet(cfg["data_path"]).head(max_samples)
+
+    # Memory-safe: only read needed columns, limited rows via batches
+    print(f"[data] Loading {max_samples} rows from {data_path}...")
+
+    needed_cols = [
+        "session_id", "time_in_video",
+        "session_order", "video_order",
+        "genre", "subgenres",
+        "release_year", "context_segment",
+    ]
+
+    pf = pq.ParquetFile(data_path)
+    batches = []
+    rows_read = 0
+    for batch in pf.iter_batches(batch_size=min(max_samples, 10000), columns=needed_cols):
+        batches.append(batch.to_pandas())
+        rows_read += len(batches[-1])
+        if rows_read >= max_samples:
+            break
+
+    df = pd.concat(batches, ignore_index=True).head(max_samples)
     print(f"[data] Loaded {len(df)} rows")
 
     # --- Label Engineering ---
-    # skip = listened less than threshold seconds
-    # engaged (non-skip) = listened >= threshold seconds
     threshold = cfg.get("skip_threshold_seconds", 30)
     df["is_engaged"] = (df["time_in_video"] >= threshold).astype(int)
     print(f"[data] Label distribution (threshold={threshold}s):")
-    print(df["is_engaged"].value_counts().to_string())
+    print(f"  engaged (1): {(df['is_engaged'] == 1).sum()}")
+    print(f"  skipped (0): {(df['is_engaged'] == 0).sum()}")
 
     # --- Feature Engineering ---
-    # Numeric features from XITE
     numeric_cols = []
-    for col in ["session_order", "video_order", "time_in_video"]:
-        if col in df.columns:
-            # time_in_video is the target signal, don't use as feature
-            if col != "time_in_video":
-                numeric_cols.append(col)
-
-    # Categorical features - encode genre/subgenres
     cat_cols = []
+
+    if "session_order" in df.columns:
+        numeric_cols.append("session_order")
+    if "video_order" in df.columns:
+        numeric_cols.append("video_order")
+    if "release_year" in df.columns:
+        df["release_year"] = pd.to_numeric(df["release_year"], errors="coerce").fillna(0)
+        numeric_cols.append("release_year")
+    if "context_segment" in df.columns:
+        numeric_cols.append("context_segment")
+
     if "genre" in df.columns:
         le_genre = LabelEncoder()
-        df["genre_encoded"] = le_genre.fit_transform(df["genre"].fillna("unknown").astype(str))
+        df["genre_encoded"] = le_genre.fit_transform(
+            df["genre"].fillna("unknown").astype(str)
+        )
         cat_cols.append("genre_encoded")
 
     if "subgenres" in df.columns:
         le_sub = LabelEncoder()
-        df["subgenre_encoded"] = le_sub.fit_transform(df["subgenres"].fillna("unknown").astype(str))
+        df["subgenre_encoded"] = le_sub.fit_transform(
+            df["subgenres"].fillna("unknown").astype(str)
+        )
         cat_cols.append("subgenre_encoded")
 
-    # Release year as numeric
-    for col in ["release_year", "release year"]:
-        if col in df.columns:
-            df["release_year_clean"] = pd.to_numeric(df[col], errors="coerce").fillna(0)
-            numeric_cols.append("release_year_clean")
-            break
-
-    # Context segment if available
-    if "context_segment" in df.columns:
-        numeric_cols.append("context_segment")
-
     feature_cols = numeric_cols + cat_cols
-    print(f"[data] Using features: {feature_cols}")
+    print(f"[data] Features: {feature_cols}")
 
-    df["_features"] = True  # marker
     return df, feature_cols
 
 

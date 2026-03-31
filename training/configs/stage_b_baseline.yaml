@@ -1,0 +1,12 @@
+# Stage B Baseline: Logistic Regression
+# Simplest possible model to establish a performance floor.
+model_type: "logistic_regression"
+data_path: "/data/xite/xite_msd.parquet"
+skip_threshold_seconds: 30
+max_samples: 50000
+random_seed: 42
+train_ratio: 0.8
+model_params:
+  C: 1.0
+  max_iter: 1000
+  solver: "lbfgs"

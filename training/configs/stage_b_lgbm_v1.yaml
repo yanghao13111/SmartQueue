@@ -1,0 +1,19 @@
+# Stage B Candidate v1: LightGBM
+# Gradient boosted trees - expected to outperform logistic regression baseline.
+model_type: "lightgbm"
+data_path: "/data/xite/xite_msd.parquet"
+skip_threshold_seconds: 30
+max_samples: 50000
+random_seed: 42
+train_ratio: 0.8
+num_boost_round: 200
+model_params:
+  objective: "binary"
+  metric: "binary_logloss"
+  learning_rate: 0.05
+  num_leaves: 31
+  max_depth: 6
+  feature_fraction: 0.8
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  verbosity: -1

@@ -1,0 +1,19 @@
+# Stage B Candidate v3: LightGBM with different hyperparameters
+# Higher learning rate + more leaves to test faster convergence and more complex trees.
+model_type: "lightgbm"
+data_path: "/data/xite/xite_msd.parquet"
+skip_threshold_seconds: 30
+max_samples: 200000
+random_seed: 42
+train_ratio: 0.8
+num_boost_round: 150
+model_params:
+  objective: "binary"
+  metric: "binary_logloss"
+  learning_rate: 0.1
+  num_leaves: 63
+  max_depth: 8
+  feature_fraction: 0.7
+  bagging_fraction: 0.7
+  bagging_freq: 3
+  verbosity: -1

@@ -3,13 +3,11 @@
   "user_features": {
     "user_skip_rate": 0.18,
     "user_favorite_genre_encoded": 12,
-    "user_avg_engagement": 0.82
+    "user_watch_time_avg": 142
   },
   "candidate_songs": [
     {
       "video_id": "901a48d1-c08f-4de9-b3f3-a7241476d0c5",
-      "session_order": 0,
-      "video_order": 0,
       "release_year": 1995,
       "context_segment": 1,
       "genre_encoded": 12,
@@ -17,8 +15,6 @@
     },
     {
       "video_id": "c8567dd0-8bb2-4dba-809b-d35f2dabcf61",
-      "session_order": 0,
-      "video_order": 3,
       "release_year": 1995,
       "context_segment": 1,
       "genre_encoded": 12,
@@ -26,8 +22,6 @@
     },
     {
       "video_id": "56b983e0-a337-49df-96bb-594e42b00511",
-      "session_order": 0,
-      "video_order": 9,
       "release_year": 1999,
       "context_segment": 1,
       "genre_encoded": 12,

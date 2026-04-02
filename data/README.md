@@ -158,7 +158,7 @@ flowchart TD
     E -->|POST /queue| G[FastAPI Serving\n/queue endpoint]
     G -->|ranked_songs| E
     E -->|write at session end| H[(Feedback Store\nfeedback/)]
-    H -->|Pipeline 2: retrain| I[(Retrain Dataset\nretrain/v{date}/)]
+    H -->|Pipeline 2: retrain| I[(Retrain Dataset\nretrain/vYYYYMMDD/)]
     I -->|updated train.parquet| D
 
     style B fill:#2d4a7a,color:#fff

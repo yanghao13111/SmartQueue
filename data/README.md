@@ -7,10 +7,10 @@ SmartQueue uses a two-phase data architecture:
 1. **Offline Training Phase** — XITE session data (real + synthetic) is ingested into Chameleon object storage, transformed into feature sets, and used to train a LightGBM engagement ranking model.
 2. **Production Simulation Phase** — A held-out production split from XITE emulates real users hitting the serving endpoint. Feedback (predicted vs. actual engagement) is logged per session and periodically folded back into training via a daily retrain pipeline to close the feedback loop.
 
-All data lives in a single MinIO bucket (`smartqueue-data`) on Chameleon, organized by prefix:
+All data lives in a single Chameleon Object Storage bucket (`ObjStore_proj13`) on CHI@TACC, organized by prefix:
 
 ```
-smartqueue-data/
+ObjStore_proj13/
 ├── raw/                      # XITE source data (one-shot)
 ├── processed/                # Initial train/val/test/production splits
 ├── feedback/                 # Per-session feedback from production simulation
@@ -23,7 +23,7 @@ smartqueue-data/
 
 ### 2.1 Raw Data Storage
 
-**Location:** `s3://smartqueue-data/raw/`
+**Location:** `s3://ObjStore_proj13/raw/`
 
 **Purpose:** Immutable landing zone for the external XITE source data. Only contains data ingested from outside — synthetic data is generated downstream in the feature pipeline.
 
@@ -59,7 +59,7 @@ smartqueue-data/
 
 ### 2.2 Processed Feature Store
 
-**Location:** `s3://smartqueue-data/processed/`
+**Location:** `s3://ObjStore_proj13/processed/`
 
 **Purpose:** Initial train/val/test/production splits with pre-computed features, generated once before the first training run. Synthetic rows are generated here and mixed into train/val splits.
 
@@ -95,7 +95,7 @@ smartqueue-data/
 
 ### 2.3 Production Feedback Store
 
-**Location:** `s3://smartqueue-data/feedback/`
+**Location:** `s3://ObjStore_proj13/feedback/`
 
 **Purpose:** Per-session feedback logs from production simulation. The data generator accumulates feedback in memory during a session, then writes one file per session when the session ends. These files are the input to the daily retrain pipeline.
 
@@ -126,7 +126,7 @@ smartqueue-data/
 
 ### 2.4 Retrain Dataset Store
 
-**Location:** `s3://smartqueue-data/retrain/v{YYYYMMDD}/`
+**Location:** `s3://ObjStore_proj13/retrain/v{YYYYMMDD}/`
 
 **Purpose:** Daily versioned training datasets produced by the retrain pipeline. Each version is a full regeneration — not an append — combining original XITE data with accumulated feedback.
 

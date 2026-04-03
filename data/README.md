@@ -88,6 +88,8 @@ ObjStore_proj13/
 
 **Note on user features:** For training and evaluation, user features are computed from all events in the session and attached to every row. For production simulation, user features are computed from only the first half of the session to mirror real serving behavior.
 
+**Note on online vs. pre-computed features:** In a real serving scenario, user features would be computed on-demand at inference time from the user's current session events — this path is implemented in `data/pipelines/feature_service/feature_service.py`. In this simulation, user features are pre-computed during feature engineering and stored directly in `production.parquet` to avoid redundant computation overhead when the data generator replays sessions. The two approaches are functionally equivalent and use identical logic.
+
 **Written by:** Feature pipeline (Pipeline 1, one-shot)
 **Versioned by:** `metadata.json` with timestamp and split sizes
 

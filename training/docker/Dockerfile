@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir \
     pandas \
     numpy \
     pyyaml \
+    pyarrow \
     torchaudio
 
 WORKDIR /workspace

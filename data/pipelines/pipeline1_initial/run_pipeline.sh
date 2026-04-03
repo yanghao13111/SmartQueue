@@ -45,6 +45,10 @@ echo "--- Step 2: Feature Engineering ---"
 $PYTHON "$SCRIPT_DIR/feature_engineering.py" --output-dir "$OUTPUT_DIR"
 
 echo ""
+echo "--- Step 3: Upload to S3 ---"
+$PYTHON "$SCRIPT_DIR/upload_data.py" --data-dir "$OUTPUT_DIR"
+
+echo ""
 echo "============================================"
 echo " Pipeline 1 complete."
 echo " Output: $OUTPUT_DIR/processed/"

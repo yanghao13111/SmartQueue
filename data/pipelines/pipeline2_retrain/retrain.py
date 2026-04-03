@@ -20,6 +20,7 @@ Usage:
 """
 
 import os
+import sys
 import json
 import time
 import argparse
@@ -27,6 +28,11 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "utils"))
+import s3
+
+LOCAL_MODE = os.getenv("LOCAL_MODE", "false").lower() == "true"
 
 SKIP_THRESHOLD = 30
 SCRIPT_DIR     = Path(__file__).resolve().parent
@@ -201,6 +207,16 @@ def main():
     print(f"Total time: {elapsed:.1f}s")
     print(f"Retrain data → {retrain_dir}")
     print(f"{'='*50}")
+
+    # Upload retrain output to S3
+    if not LOCAL_MODE:
+        print("\n[5/4] Uploading to S3 ...")
+        t = time.perf_counter()
+        s3_prefix = f"retrain/v{date_str}"
+        n = s3.upload_dir(retrain_dir, s3_prefix)
+        print(f"  {n} file(s) → s3://{s3.BUCKET}/{s3_prefix}/  ({time.perf_counter()-t:.1f}s)")
+    else:
+        print("\nLOCAL_MODE=true — skipping S3 upload.")
 
 
 if __name__ == "__main__":

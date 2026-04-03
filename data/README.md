@@ -103,7 +103,7 @@ ObjStore_proj13/
 
 | File | Description |
 |------|-------------|
-| `{YYYYMMDD}_{session_id}.jsonl` | One JSON record per ranked song in this session |
+| `{YYYYMMDD}_{session_id}_{loop_num}_{run_id}.jsonl` | One JSON record per ranked song in this session |
 
 **Schema — each JSONL record:**
 
@@ -118,7 +118,7 @@ ObjStore_proj13/
 }
 ```
 
-**Write pattern:** The generator holds feedback records in memory during simulation. At session end, all records are written to MinIO in a single PUT as `{YYYYMMDD}_{session_id}.jsonl`. This avoids concurrent write conflicts when multiple sessions run in parallel, and allows the retrain pipeline to filter by date prefix.
+**Write pattern:** The generator holds feedback records in memory during simulation. At session end, all records are written locally as `{YYYYMMDD}_{session_id}_{loop_num}_{run_id}.jsonl` and then uploaded to Chameleon Object Storage. This avoids concurrent write conflicts when multiple sessions run in parallel, and allows the retrain pipeline to filter by date prefix.
 
 **Written by:** Data generator (production simulation script)
 **Versioned by:** Each session gets its own immutable file; no overwriting
@@ -207,5 +207,5 @@ Synthetic data is generated inside Pipeline 1 and mixed directly into `train.par
 | Pipeline | Trigger | Input | Output | Location |
 |----------|---------|-------|--------|----------|
 | Pipeline 1: Ingestion + Feature | One-shot | XITE download | `raw/` + `processed/` | `data/pipelines/pipeline1_initial/` |
-| Pipeline 2: Daily Retrain | Daily (or manual) | `raw/xite_msd.parquet` + `feedback/*.jsonl` | `retrain/v{date}/` | `data/pipelines/pipeline2_retrain/` |
+| Pipeline 2: Daily Retrain | Daily (or manual) | `processed/train.parquet` + `processed/production.parquet` + `feedback/{date}_*.jsonl` | `retrain/v{date}/` | `data/pipelines/pipeline2_retrain/` |
 | Data Generator | Manual simulation run | `processed/production.parquet` | `feedback/{YYYYMMDD}_{session_id}.jsonl` | `data/pipelines/generator/` |

@@ -16,14 +16,11 @@ services:
     build: pipelines/generator/
     container_name: smartqueue-generator
     command: python generator.py
+    env_file:
+      - ../.env
     environment:
       - DATA_DIR=/app/data
-      - QUEUE_ENDPOINT=${QUEUE_ENDPOINT:-}
-      - S3_ENDPOINT=${S3_ENDPOINT:-}
-      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-}
-      - S3_SECRET_KEY=${S3_SECRET_KEY:-}
-      - S3_BUCKET=${S3_BUCKET:-ObjStore_proj13}
-      - LOCAL_MODE=${LOCAL_MODE:-true}
+      - LOCAL_MODE=${LOCAL_MODE:-false}
       - CONCURRENCY=${CONCURRENCY:-10}
       - FEEDBACK_DELAY=${FEEDBACK_DELAY:-1.0}
     volumes:
@@ -31,15 +28,15 @@ services:
       - ./feedback:/app/data/feedback
 
   pipeline2:
-    build: pipelines/pipeline2_retrain/
+    build:
+      context: pipelines/
+      dockerfile: pipeline2_retrain/Dockerfile
     container_name: smartqueue-pipeline2
+    env_file:
+      - ../.env
     environment:
       - DATA_DIR=/app/data
-      - S3_ENDPOINT=${S3_ENDPOINT:-}
-      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-}
-      - S3_SECRET_KEY=${S3_SECRET_KEY:-}
-      - S3_BUCKET=${S3_BUCKET:-ObjStore_proj13}
-      - LOCAL_MODE=${LOCAL_MODE:-true}
+      - LOCAL_MODE=${LOCAL_MODE:-false}
     volumes:
       - ./processed:/app/data/processed
       - ./feedback:/app/data/feedback

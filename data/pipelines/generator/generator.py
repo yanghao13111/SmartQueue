@@ -102,6 +102,7 @@ def upload_feedback(local_path: Path, s3_key: str):
         return
     s3 = get_s3_client()
     s3.upload_file(str(local_path), S3_BUCKET, s3_key)
+    log.info(f"S3 uploaded → {s3_key}")
 
 
 # ── queue call ────────────────────────────────────────────────────────────────
